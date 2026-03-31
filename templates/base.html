@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Online Assessment Portal{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        panel: '0 30px 80px rgba(15, 23, 42, 0.35)',
+                    },
+                    backgroundImage: {
+                        'mesh-auth':
+                            'radial-gradient(circle at top left, rgba(245, 158, 11, 0.20), transparent 28%), radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.14), transparent 24%), linear-gradient(145deg, #020617 0%, #0f172a 36%, #172554 100%)',
+                    },
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="{% static 'accounts/auth.css' %}">
+    <script src="{% static 'accounts/flash.js' %}" defer></script>
+</head>
+<body class="min-h-screen bg-slate-950 font-sans text-slate-900 antialiased">
+    <div class="relative isolate min-h-screen overflow-hidden bg-mesh-auth">
+        <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:5rem_5rem] opacity-20"></div>
+        <div class="pointer-events-none absolute left-[-10rem] top-[-7rem] h-72 w-72 rounded-full bg-amber-300/20 blur-3xl"></div>
+        <div class="pointer-events-none absolute bottom-[-8rem] right-[-5rem] h-80 w-80 rounded-full bg-sky-400/20 blur-3xl"></div>
+
+        {% if messages %}
+            <div class="pointer-events-none fixed inset-x-4 top-4 z-50 ml-auto grid max-w-sm gap-3 sm:right-6 sm:left-auto" data-flash-container>
+                {% for message in messages %}
+                    <div class="flash-message pointer-events-auto flex items-start gap-3 rounded-3xl border px-4 py-3 text-sm shadow-panel backdrop-blur-xl {% if 'success' in message.tags %}border-emerald-200/80 bg-emerald-50/95 text-emerald-950{% elif 'error' in message.tags %}border-rose-200/80 bg-rose-50/95 text-rose-950{% else %}border-sky-200/80 bg-sky-50/95 text-sky-950{% endif %}" data-flash-message role="status" aria-live="polite">
+                        <div class="flex-1">
+                            <p class="leading-6">{{ message }}</p>
+                        </div>
+                        <button type="button" class="flash-close rounded-full p-1 transition hover:bg-black/5" aria-label="Dismiss notification" data-flash-close>&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <main class="relative z-10">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
