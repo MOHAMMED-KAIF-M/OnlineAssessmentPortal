@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Available Assessments{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="mb-12">
+        <h1 class="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">Available Assessments</h1>
+        <p class="mt-4 text-lg text-slate-300">Choose an assessment to test your knowledge and track your progress.</p>
+    </div>
+
+    {% if assessments %}
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {% for assessment in assessments %}
+        <div
+            class="group relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 transition-all hover:bg-white/10 hover:shadow-panel">
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+            </div>
+
+            <div class="relative flex-1">
+                <div class="mb-4 flex items-center justify-between">
+                    <span
+                        class="inline-flex items-center rounded-full bg-amber-400/10 px-2.5 py-0.5 text-xs font-medium text-amber-400 ring-1 ring-inset ring-amber-400/20">
+                        {{ assessment.duration_minutes }} Mins
+                    </span>
+                    <span class="text-xs font-semibold uppercase tracking-widest text-slate-500">{{
+                        assessment.total_marks }} Marks</span>
+                </div>
+
+                <h3 class="font-display text-2xl font-bold text-white group-hover:text-amber-400 transition-colors">{{
+                    assessment.title }}</h3>
+                <p class="mt-4 text-sm leading-6 text-slate-400">{{ assessment.description|truncatewords:20 }}</p>
+            </div>
+
+            <div class="relative mt-8">
+                <a href="{% url 'take_assessment' assessment.id %}"
+                    class="inline-flex w-full items-center justify-center rounded-2xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600">
+                    Start Assessment
+                    <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="rounded-3xl border border-dashed border-white/20 bg-white/5 p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        </svg>
+        <h3 class="mt-4 text-lg font-semibold text-white">No assessments found</h3>
+        <p class="mt-2 text-sm text-slate-400">Check back later for new tests.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

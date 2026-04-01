@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Taking Assessment: {{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="sticky top-4 z-40 mb-12 flex items-center justify-between rounded-3xl border border-white/20 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-xl">
+        <div>
+            <h1 class="font-display text-2xl font-bold text-white">{{ assessment.title }}</h1>
+            <p class="mt-1 text-sm text-slate-400">Time Limit: <span id="time-limit">{{ assessment.duration_minutes }}</span> Minutes</p>
+        </div>
+        <div class="flex items-center gap-4 text-amber-400">
+            <svg class="h-6 w-6 animate-[pulse_2s_infinite]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="font-display text-3xl font-bold tracking-tight" id="timer">--:--</span>
+        </div>
+    </div>
+
+    <form id="assessment-form" method="post" class="space-y-12 pb-24">
+        {% csrf_token %}
+        <div class="grid gap-8">
+            {% for question in questions %}
+                <section class="group relative overflow-hidden rounded-[40px] border border-white/10 bg-white/5 p-8 transition-all hover:bg-white/10 hover:border-white/20">
+                    <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
+
+                    <div class="relative">
+                        <div class="mb-6 flex items-center gap-3">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-600/20 font-display text-lg font-bold text-amber-500 ring-1 ring-inset ring-amber-500/30">
+                                {{ forloop.counter }}
+                            </span>
+                            <span class="text-xs font-semibold uppercase tracking-widest text-slate-500">{{ question.marks }} Marks</span>
+                        </div>
+                        
+                        <p class="font-display text-xl leading-relaxed text-white sm:text-2xl">{{ question.text }}</p>
+
+                        <div class="mt-12 grid gap-4 sm:grid-cols-2">
+                            {% for choice in question.choices.all %}
+                                <label class="relative flex cursor-pointer items-start rounded-3xl border border-white/10 bg-white/5 p-5 text-slate-300 transition-all hover:bg-white/10 hover:border-amber-400/50 has-[:checked]:bg-amber-600/20 has-[:checked]:border-amber-500 has-[:checked]:text-amber-100">
+                                    <input type="radio" 
+                                           name="question_{{ question.id }}" 
+                                           value="{{ choice.id }}" 
+                                           class="mt-1.5 h-4 w-4 appearance-none rounded-full border border-white/30 checked:border-amber-500 checked:bg-amber-500 ring-offset-slate-900 focus:ring-amber-500"
+                                           required>
+                                    <span class="ml-4 text-base leading-6">{{ choice.text }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center p-8 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent">
+            <button type="submit" class="group flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 px-12 py-5 text-xl font-bold text-white shadow-[0_20px_50px_rgba(234,88,12,0.3)] transition-all hover:-translate-y-1 hover:shadow-[0_25px_60px_rgba(234,88,12,0.4)]">
+                Finish Assessment
+                <svg class="h-6 w-6 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
+                </svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Simple Timer Logic
+    const durationInMinutes = {{ assessment.duration_minutes }};
+    let timeRemaining = durationInMinutes * 60;
+    const timerDisplay = document.getElementById('timer');
+    const form = document.getElementById('assessment-form');
+
+    const updateTimer = () => {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        
+        timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            alert("Time is up! Submitting your assessment.");
+            form.submit();
+        }
+        
+        timeRemaining--;
+    };
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Prevent accidental page leave
+    window.addEventListener('beforeunload', (e) => {
+        e.preventDefault();
+        e.returnValue = '';
+    });
+</script>
+{% endblock %}
