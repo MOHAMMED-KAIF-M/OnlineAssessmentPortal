@@ -31,6 +31,7 @@
             <nav class="mt-6 flex flex-wrap gap-3">
                 <a class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {% if admin_page == 'dashboard' %}bg-slate-950 text-white shadow-sm{% else %}bg-white text-slate-700 hover:bg-slate-100{% endif %}" href="{% url 'admin_dashboard' %}">Dashboard</a>
                 <a class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {% if admin_page == 'courses' %}bg-slate-950 text-white shadow-sm{% else %}bg-white text-slate-700 hover:bg-slate-100{% endif %}" href="{% url 'course_list' %}">Courses</a>
+                <a class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {% if admin_page == 'assessments' %}bg-slate-950 text-white shadow-sm{% else %}bg-white text-slate-700 hover:bg-slate-100{% endif %}" href="{% url 'generate_assessment' %}">Assessments</a>
             </nav>
         </div>
 

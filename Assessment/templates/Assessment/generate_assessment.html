@@ -1,0 +1,501 @@
+{% extends "accounts/admin_layout.html" %}
+
+{% block title %}Generate Assessment{% endblock %}
+
+{% block admin_eyebrow %}Assessment Builder{% endblock %}
+{% block admin_heading %}Generate Assessment{% endblock %}
+{% block admin_description %}Create a new assessment from the imported question bank. The hierarchy filters now use searchable click-to-select panels instead of the browser default multiselect boxes.{% endblock %}
+
+{% block admin_header_detail %}
+<div class="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Generator Notes</p>
+    <p class="mt-2 text-sm font-semibold text-slate-950">Searchable hierarchy filters</p>
+    <p class="mt-1 text-sm text-slate-600">Leave any hierarchy panel empty to include everything at that level.</p>
+</div>
+{% endblock %}
+
+{% block admin_body %}
+<div class="space-y-8">
+    <section class="rounded-[30px] border border-slate-200 bg-slate-50 p-6 shadow-sm">
+        <div class="grid gap-6 2xl:grid-cols-[minmax(0,1.45fr)_360px]">
+            <form method="post" class="space-y-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="preview">
+
+                {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <section class="rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+                    <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Assessment Meta</p>
+                            <h2 class="mt-2 text-2xl font-bold text-slate-950">Basic Setup</h2>
+                        </div>
+                        <p class="max-w-md text-sm leading-6 text-slate-500">Set the title, course, and description first.</p>
+                    </div>
+
+                    <div class="mt-5 grid gap-5 md:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-semibold text-slate-700" for="{{ form.title.id_for_label }}">Assessment Title</label>
+                            {{ form.title }}
+                            {% for error in form.title.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-slate-700" for="{{ form.course.id_for_label }}">Course</label>
+                            {{ form.course }}
+                            <p class="mt-2 text-xs text-slate-500">Changing the course reloads the hierarchy below.</p>
+                            {% for error in form.course.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-sm font-semibold text-slate-700" for="{{ form.description.id_for_label }}">Description</label>
+                            {{ form.description }}
+                            {% for error in form.description.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+                    <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Question Scope</p>
+                            <h2 class="mt-2 text-2xl font-bold text-slate-950">Hierarchy Selection</h2>
+                        </div>
+                        <p class="max-w-md text-sm leading-6 text-slate-500">Search, click to select, and use `All` or `Clear` when needed.</p>
+                    </div>
+
+                    <div class="hidden">
+                        {{ form.subcourses }}
+                        {{ form.modules }}
+                        {{ form.workbooks }}
+                        {{ form.topics }}
+                    </div>
+
+                    <div class="mt-5 grid gap-5 xl:grid-cols-2">
+                        {% for panel in hierarchy_panels %}
+                            <article class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h3 class="text-base font-semibold text-slate-950">{{ panel.label }}</h3>
+                                        <p class="mt-1 text-sm leading-6 text-slate-500">{{ panel.hint }}</p>
+                                    </div>
+                                    <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700" id="{{ panel.name }}-count">All</span>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <input id="{{ panel.name }}-search" type="search" placeholder="Search {{ panel.label|lower }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-sky-500 focus:ring-sky-500">
+                                    <button type="button" data-select-all="{{ panel.name }}" class="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">All</button>
+                                    <button type="button" data-clear-selection="{{ panel.name }}" class="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">Clear</button>
+                                </div>
+                                <div id="{{ panel.name }}-selected" class="mt-4 flex min-h-10 flex-wrap gap-2"></div>
+                                <div id="{{ panel.name }}-options" class="mt-4 max-h-72 overflow-y-auto rounded-[22px] border border-slate-200 bg-slate-50 p-2"></div>
+                                {% for error in panel.field.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <div class="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+                    <section class="rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Question Types</p>
+                        <h2 class="mt-2 text-2xl font-bold text-slate-950">Assessment Composition</h2>
+                        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                            {% for checkbox in form.question_types %}
+                                <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50/40">
+                                    {{ checkbox.tag }}
+                                    <span>{{ checkbox.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% for error in form.question_types.errors %}<p class="mt-3 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                    </section>
+
+                    <section class="rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Rules</p>
+                        <h2 class="mt-2 text-2xl font-bold text-slate-950">Assessment Settings</h2>
+                        <div class="mt-5 grid gap-4">
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700" for="{{ form.question_count.id_for_label }}">Question Count</label>
+                                {{ form.question_count }}
+                                {% for error in form.question_count.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700" for="{{ form.duration_minutes.id_for_label }}">Duration Minutes</label>
+                                {{ form.duration_minutes }}
+                                {% for error in form.duration_minutes.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700" for="{{ form.marks_per_question.id_for_label }}">Marks Per Question</label>
+                                {{ form.marks_per_question }}
+                                {% for error in form.marks_per_question.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                            </div>
+                            <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm">
+                                {{ form.randomize }}
+                                <span>Randomize selected questions</span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Optional Filter</p>
+                    <h2 class="mt-2 text-2xl font-bold text-slate-950">Difficulty</h2>
+                    {% if form.difficulties.field.choices %}
+                        <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {% for checkbox in form.difficulties %}
+                                <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/40">
+                                    {{ checkbox.tag }}
+                                    <span>{{ checkbox.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="mt-5 text-sm text-slate-500">No difficulty tags are available in the imported question bank yet.</p>
+                    {% endif %}
+                    {% for error in form.difficulties.errors %}<p class="mt-3 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                </section>
+
+                <div class="flex items-center justify-between rounded-3xl border border-sky-100 bg-sky-50 px-5 py-4">
+                    <p class="max-w-2xl text-sm leading-6 text-slate-600">Preview first. Then confirm the correct option for every generated question before saving.</p>
+                    <button type="submit" class="inline-flex items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">Preview Questions</button>
+                </div>
+            </form>
+
+            <aside class="space-y-5 2xl:sticky 2xl:top-6 2xl:self-start">
+                <article class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Builder Flow</p>
+                    <div class="mt-4 space-y-4">
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4"><p class="text-sm leading-6 text-slate-700">1. Choose the course and drill down through the hierarchy.</p></div>
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4"><p class="text-sm leading-6 text-slate-700">2. Set the question rules and preview size.</p></div>
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4"><p class="text-sm leading-6 text-slate-700">3. Review the generated questions and assign the correct option.</p></div>
+                    </div>
+                </article>
+
+                <article class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Current Preview</p>
+                    <div class="mt-4 grid gap-4">
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Matched Rows</p>
+                            <p class="mt-2 text-4xl font-bold tracking-tight text-slate-950">{{ matched_question_count }}</p>
+                        </div>
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Selected Rows</p>
+                            <p class="mt-2 text-4xl font-bold tracking-tight text-slate-950">{{ preview_entries|length }}</p>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-sm leading-6 text-slate-600">Only question-bank rows with separate Option A-D values are used so the generated assessment works with the current student test screen.</p>
+                </article>
+            </aside>
+        </div>
+    </section>
+
+    {% if preview_entries %}
+        <section class="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-col gap-3 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Final Review</p>
+                    <h2 class="mt-3 text-3xl font-bold text-slate-950">Choose the Correct Option for Each Question</h2>
+                    <p class="mt-3 text-sm leading-7 text-slate-600">This stores the answer key only in the generated assessment, not back into the workbook question bank.</p>
+                </div>
+                <div class="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Assessment Size</p>
+                    <p class="mt-2 text-2xl font-bold text-slate-950">{{ preview_entries|length }} questions</p>
+                </div>
+            </div>
+            <form method="post" class="mt-6 space-y-6">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <input type="hidden" name="title" value="{{ persisted_filters.title }}">
+                <input type="hidden" name="description" value="{{ persisted_filters.description }}">
+                <input type="hidden" name="course" value="{{ persisted_filters.course }}">
+                <input type="hidden" name="question_count" value="{{ persisted_filters.question_count }}">
+                <input type="hidden" name="duration_minutes" value="{{ persisted_filters.duration_minutes }}">
+                <input type="hidden" name="marks_per_question" value="{{ persisted_filters.marks_per_question }}">
+                {% if persisted_filters.randomize %}<input type="hidden" name="randomize" value="on">{% endif %}
+                {% for value in persisted_filters.subcourses %}<input type="hidden" name="subcourses" value="{{ value }}">{% endfor %}
+                {% for value in persisted_filters.modules %}<input type="hidden" name="modules" value="{{ value }}">{% endfor %}
+                {% for value in persisted_filters.workbooks %}<input type="hidden" name="workbooks" value="{{ value }}">{% endfor %}
+                {% for value in persisted_filters.topics %}<input type="hidden" name="topics" value="{{ value }}">{% endfor %}
+                {% for value in persisted_filters.question_types %}<input type="hidden" name="question_types" value="{{ value }}">{% endfor %}
+                {% for value in persisted_filters.difficulties %}<input type="hidden" name="difficulties" value="{{ value }}">{% endfor %}
+                <input type="hidden" name="selected_entry_ids" value="{{ selected_entry_ids }}">
+
+                {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                    </div>
+                {% endif %}
+
+                {% for entry in preview_entries %}
+                    <article class="rounded-[28px] border border-slate-200 bg-slate-50 p-6">
+                        <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Question {{ forloop.counter }}</p>
+                                <h3 class="mt-3 text-xl font-semibold leading-8 text-slate-950">{{ entry.question_text }}</h3>
+                            </div>
+                            <div class="grid gap-2 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-1">
+                                <div><span class="font-semibold text-slate-800">Subcourse:</span> {{ entry.subcourse }}</div>
+                                <div><span class="font-semibold text-slate-800">Module:</span> {{ entry.module }}</div>
+                                <div><span class="font-semibold text-slate-800">Workbook:</span> {{ entry.workbook_title }}</div>
+                                <div><span class="font-semibold text-slate-800">Topic:</span> {{ entry.topic }}</div>
+                                <div><span class="font-semibold text-slate-800">Type:</span> {{ entry.question_type }}</div>
+                                <div><span class="font-semibold text-slate-800">Difficulty:</span> {{ entry.difficulty }}</div>
+                            </div>
+                        </div>
+
+                        {% if entry.context %}
+                            <div class="mt-4 rounded-3xl border border-sky-100 bg-sky-50 px-4 py-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Scenario / Context</p>
+                                <p class="mt-2 text-sm leading-7 text-slate-700">{{ entry.context }}</p>
+                            </div>
+                        {% endif %}
+                        {% if entry.details %}
+                            <div class="mt-4 rounded-3xl border border-emerald-100 bg-emerald-50 px-4 py-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Skills Tested</p>
+                                <p class="mt-2 text-sm leading-7 text-slate-700">{{ entry.details }}</p>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+                            <div class="grid gap-3">
+                                {% for option in entry.options %}
+                                    <div class="rounded-3xl border border-slate-200 bg-white px-4 py-4 text-sm leading-7 text-slate-700">
+                                        <span class="font-semibold text-slate-950">{{ option.label }}.</span>
+                                        {{ option.value }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="rounded-3xl border border-slate-200 bg-white p-5">
+                                <p class="text-sm font-semibold text-slate-900">Correct Option</p>
+                                <div class="mt-4 grid gap-3">
+                                    {% for option in entry.options %}
+                                        <label class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                                            <input type="radio" name="correct_choice_{{ entry.id }}" value="{{ option.label }}" {% if entry.selected_correct == option.label %}checked{% endif %} required>
+                                            <span>{{ option.label }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-full bg-slate-950 px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">Create Assessment</button>
+                </div>
+            </form>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+{{ hierarchy_data|json_script:"assessment-hierarchy-data" }}
+<script>
+(() => {
+    const hierarchyElement = document.getElementById('assessment-hierarchy-data');
+    const courseSelect = document.getElementById('{{ form.course.id_for_label }}');
+    const subcourseSelect = document.getElementById('{{ form.subcourses.id_for_label }}');
+    const moduleSelect = document.getElementById('{{ form.modules.id_for_label }}');
+    const workbookSelect = document.getElementById('{{ form.workbooks.id_for_label }}');
+    const topicSelect = document.getElementById('{{ form.topics.id_for_label }}');
+
+    if (!hierarchyElement || !courseSelect || !subcourseSelect || !moduleSelect || !workbookSelect || !topicSelect) {
+        return;
+    }
+
+    const hierarchy = JSON.parse(hierarchyElement.textContent);
+    const dependencyFields = new Set(['subcourses', 'modules', 'workbooks']);
+    const pickerMap = {
+        subcourses: { select: subcourseSelect, search: document.getElementById('subcourses-search'), selected: document.getElementById('subcourses-selected'), options: document.getElementById('subcourses-options'), count: document.getElementById('subcourses-count'), label: 'subcourses', emptyText: 'All subcourses', noResultsText: 'No subcourses match this search.', noOptionsText: 'No subcourses available for this course.' },
+        modules: { select: moduleSelect, search: document.getElementById('modules-search'), selected: document.getElementById('modules-selected'), options: document.getElementById('modules-options'), count: document.getElementById('modules-count'), label: 'modules', emptyText: 'All modules', noResultsText: 'No modules match this search.', noOptionsText: 'No modules available for this selection.' },
+        workbooks: { select: workbookSelect, search: document.getElementById('workbooks-search'), selected: document.getElementById('workbooks-selected'), options: document.getElementById('workbooks-options'), count: document.getElementById('workbooks-count'), label: 'workbooks', emptyText: 'All workbooks', noResultsText: 'No workbooks match this search.', noOptionsText: 'No workbooks available for this selection.' },
+        topics: { select: topicSelect, search: document.getElementById('topics-search'), selected: document.getElementById('topics-selected'), options: document.getElementById('topics-options'), count: document.getElementById('topics-count'), label: 'topics', emptyText: 'All topics', noResultsText: 'No topics match this search.', noOptionsText: 'No topics available for this selection.' },
+    };
+
+    const getSelectedValues = (select) => Array.from(select.options).filter((option) => option.selected).map((option) => option.value);
+
+    const setOptions = (select, values, selectedValues) => {
+        const selectedSet = new Set(selectedValues);
+        select.innerHTML = '';
+        values.forEach((value) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            option.selected = selectedSet.has(value);
+            select.appendChild(option);
+        });
+    };
+
+    const buildChoices = (course, selectedSubcourses, selectedModules, selectedWorkbooks) => {
+        const courseTree = hierarchy[course] || {};
+        const subcourses = Object.keys(courseTree).sort((a, b) => a.localeCompare(b));
+        const modules = new Set();
+        const workbooks = new Set();
+        const topics = new Set();
+
+        Object.entries(courseTree).forEach(([subcourse, modulesTree]) => {
+            if (selectedSubcourses.length && !selectedSubcourses.includes(subcourse)) {
+                return;
+            }
+            Object.entries(modulesTree).forEach(([module, workbooksTree]) => {
+                if (module) {
+                    modules.add(module);
+                }
+                if (selectedModules.length && !selectedModules.includes(module)) {
+                    return;
+                }
+                Object.entries(workbooksTree).forEach(([workbook, topicList]) => {
+                    if (workbook) {
+                        workbooks.add(workbook);
+                    }
+                    if (selectedWorkbooks.length && !selectedWorkbooks.includes(workbook)) {
+                        return;
+                    }
+                    topicList.forEach((topic) => {
+                        if (topic) {
+                            topics.add(topic);
+                        }
+                    });
+                });
+            });
+        });
+
+        return {
+            subcourses,
+            modules: Array.from(modules).sort((a, b) => a.localeCompare(b)),
+            workbooks: Array.from(workbooks).sort((a, b) => a.localeCompare(b)),
+            topics: Array.from(topics).sort((a, b) => a.localeCompare(b)),
+        };
+    };
+
+    const renderSelectedSummary = (picker) => {
+        const selectedValues = getSelectedValues(picker.select);
+        picker.selected.innerHTML = '';
+        if (!selectedValues.length) {
+            const badge = document.createElement('span');
+            badge.className = 'inline-flex items-center rounded-full border border-dashed border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500';
+            badge.textContent = picker.emptyText;
+            picker.selected.appendChild(badge);
+            picker.count.textContent = 'All';
+            return;
+        }
+
+        selectedValues.slice(0, 4).forEach((value) => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800';
+            chip.innerHTML = `<span class="truncate max-w-[11rem]">${value}</span><span aria-hidden="true">&times;</span>`;
+            chip.addEventListener('click', () => toggleOption(picker.label, value, false));
+            picker.selected.appendChild(chip);
+        });
+
+        if (selectedValues.length > 4) {
+            const more = document.createElement('span');
+            more.className = 'inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600';
+            more.textContent = `+${selectedValues.length - 4} more`;
+            picker.selected.appendChild(more);
+        }
+
+        picker.count.textContent = `${selectedValues.length} selected`;
+    };
+
+    const renderPickerOptions = (picker) => {
+        const query = picker.search.value.trim().toLowerCase();
+        const options = Array.from(picker.select.options);
+        const matchingOptions = options.filter((option) => option.textContent.toLowerCase().includes(query));
+        picker.options.innerHTML = '';
+
+        const emptyText = !options.length ? picker.noOptionsText : picker.noResultsText;
+        if (!matchingOptions.length) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-500';
+            emptyState.textContent = emptyText;
+            picker.options.appendChild(emptyState);
+            return;
+        }
+
+        const stack = document.createElement('div');
+        stack.className = 'space-y-2';
+        matchingOptions.forEach((option) => {
+            const selected = option.selected;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = selected
+                ? 'flex w-full items-center justify-between gap-4 rounded-2xl border border-slate-900 bg-slate-950 px-4 py-3 text-left text-sm font-medium text-white shadow-sm transition hover:bg-slate-800'
+                : 'flex w-full items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50/40';
+            button.innerHTML = `<span class="min-w-0 flex-1 break-words leading-6">${option.textContent}</span><span class="${selected ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'} inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-bold">${selected ? 'ON' : '+'}</span>`;
+            button.addEventListener('click', () => toggleOption(picker.label, option.value));
+            stack.appendChild(button);
+        });
+        picker.options.appendChild(stack);
+    };
+
+    const renderPicker = (picker) => {
+        renderSelectedSummary(picker);
+        renderPickerOptions(picker);
+    };
+
+    const renderAllPickers = () => {
+        Object.values(pickerMap).forEach(renderPicker);
+    };
+
+    const refreshHierarchy = () => {
+        const course = courseSelect.value;
+        let selectedSubcourses = getSelectedValues(subcourseSelect);
+        let selectedModules = getSelectedValues(moduleSelect);
+        let selectedWorkbooks = getSelectedValues(workbookSelect);
+        const selectedTopics = getSelectedValues(topicSelect);
+
+        setOptions(subcourseSelect, buildChoices(course, [], [], []).subcourses, selectedSubcourses);
+        selectedSubcourses = getSelectedValues(subcourseSelect);
+        setOptions(moduleSelect, buildChoices(course, selectedSubcourses, [], []).modules, selectedModules);
+        selectedModules = getSelectedValues(moduleSelect);
+        setOptions(workbookSelect, buildChoices(course, selectedSubcourses, selectedModules, []).workbooks, selectedWorkbooks);
+        selectedWorkbooks = getSelectedValues(workbookSelect);
+        setOptions(topicSelect, buildChoices(course, selectedSubcourses, selectedModules, selectedWorkbooks).topics, selectedTopics);
+        renderAllPickers();
+    };
+
+    const toggleOption = (fieldName, value, forceSelected = null) => {
+        const picker = pickerMap[fieldName];
+        const option = Array.from(picker.select.options).find((item) => item.value === value);
+        if (!option) {
+            return;
+        }
+        option.selected = forceSelected === null ? !option.selected : forceSelected;
+        if (dependencyFields.has(fieldName)) {
+            refreshHierarchy();
+            return;
+        }
+        renderAllPickers();
+    };
+
+    Object.entries(pickerMap).forEach(([fieldName, picker]) => {
+        picker.search.addEventListener('input', () => renderPicker(picker));
+        document.querySelector(`[data-select-all="${fieldName}"]`)?.addEventListener('click', () => {
+            const query = picker.search.value.trim().toLowerCase();
+            Array.from(picker.select.options).forEach((option) => {
+                if (!query || option.textContent.toLowerCase().includes(query)) {
+                    option.selected = true;
+                }
+            });
+            dependencyFields.has(fieldName) ? refreshHierarchy() : renderAllPickers();
+        });
+        document.querySelector(`[data-clear-selection="${fieldName}"]`)?.addEventListener('click', () => {
+            Array.from(picker.select.options).forEach((option) => {
+                option.selected = false;
+            });
+            dependencyFields.has(fieldName) ? refreshHierarchy() : renderAllPickers();
+        });
+    });
+
+    courseSelect.addEventListener('change', refreshHierarchy);
+    refreshHierarchy();
+})();
+</script>
+{% endblock %}

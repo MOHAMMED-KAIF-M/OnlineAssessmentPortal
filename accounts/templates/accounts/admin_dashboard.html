@@ -31,17 +31,18 @@
                 <p class="mt-3 text-sm leading-7 text-slate-600">See admin account information, joined date, and basic profile details.</p>
             </article>
             <article class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Settings</p>
-                <h3 class="mt-3 text-xl font-semibold text-slate-950">Adjust Admin Page</h3>
-                <p class="mt-3 text-sm leading-7 text-slate-600">Use the settings area as the home for future admin preferences and controls.</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Assessments</p>
+                <h3 class="mt-3 text-xl font-semibold text-slate-950">Generate New Assessment</h3>
+                <p class="mt-3 text-sm leading-7 text-slate-600">Choose the course, question types, difficulty, and question count, then build a new assessment from the question bank.</p>
             </article>
         </div>
     </section>
 
     <section class="rounded-[30px] border border-slate-200 bg-slate-50 px-6 py-10 text-center">
         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Admin Workspace</p>
-        <h2 class="mt-4 text-3xl font-bold text-slate-950">No additional admin modules connected yet</h2>
-        <p class="mx-auto mt-4 max-w-3xl text-sm leading-7 text-slate-600">When more admin tools are added, they can appear here without changing the overall layout. For now, courses, profile, and settings stay in fixed positions at the top and within the quick actions section.</p>
+        <h2 class="mt-4 text-3xl font-bold text-slate-950">Assessment generation is now connected</h2>
+        <p class="mx-auto mt-4 max-w-3xl text-sm leading-7 text-slate-600">Use the assessments module to generate takeable tests from the workbook question bank. The generator lets you filter the source questions first and then mark the correct option for each selected item before saving.</p>
+        <a href="{% url 'generate_assessment' %}" class="mt-6 inline-flex items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">Open Assessment Generator</a>
     </section>
 </div>
 {% endblock %}

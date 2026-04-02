@@ -33,7 +33,7 @@
                             <span class="text-xs font-semibold uppercase tracking-widest text-slate-500">{{ question.marks }} Marks</span>
                         </div>
                         
-                        <p class="font-display text-xl leading-relaxed text-white sm:text-2xl">{{ question.text }}</p>
+                        <p class="whitespace-pre-line font-display text-xl leading-relaxed text-white sm:text-2xl">{{ question.text }}</p>
 
                         <div class="mt-12 grid gap-4 sm:grid-cols-2">
                             {% for choice in question.choices.all %}
