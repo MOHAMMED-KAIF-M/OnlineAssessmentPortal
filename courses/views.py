@@ -1,4 +1,5 @@
 import csv
+import os
 from collections import Counter
 from itertools import groupby
 from pathlib import Path
@@ -18,6 +19,24 @@ ANSWER_HEADER_KEYS = {"answer", "correct answer", "expected answer", "expected_a
 
 def _assessment_questions_root():
     return Path(settings.BASE_DIR) / 'Assessment Questions'
+
+
+def _long_path(path):
+    resolved = Path(path).resolve(strict=False)
+    if os.name != 'nt':
+        return str(resolved)
+    return f"\\\\?\\{resolved}"
+
+
+def _workbook_exists(path):
+    candidate = Path(path)
+    if candidate.exists() and candidate.is_file():
+        return True
+    try:
+        with open(_long_path(candidate), 'rb'):
+            return True
+    except OSError:
+        return False
 
 
 def _build_folder_node(path, course_root):
@@ -99,7 +118,7 @@ def _resolve_relative_path(course_code, relative_path):
         raise Http404("Workbook does not belong to this course.")
 
     workbook_path = _assessment_questions_root().joinpath(*parts)
-    if not workbook_path.exists() or not workbook_path.is_file() or workbook_path.suffix.lower() != '.xlsx':
+    if workbook_path.suffix.lower() != '.xlsx' or not _workbook_exists(workbook_path):
         raise Http404("Workbook not found.")
 
     return workbook_path, '/'.join(parts)
@@ -276,7 +295,7 @@ def _sheet_entry_aliases(index, worksheet_name, total_sheets):
 
 
 def _read_workbook_sheets(workbook_path, grouped_entries, selected_sheet_name):
-    workbook = load_workbook(workbook_path, data_only=True, read_only=True)
+    workbook = load_workbook(_long_path(workbook_path), data_only=True, read_only=True)
     try:
         sheet_views = []
         total_sheets = len(workbook.worksheets)

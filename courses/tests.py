@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import User
-from courses.views import _normalize_packed_question_rows, _strip_answer_columns
+from courses.views import _normalize_packed_question_rows, _resolve_relative_path, _strip_answer_columns
 from questions.models import QuestionBankEntry
 
 
@@ -240,3 +240,15 @@ class CourseListTests(TestCase):
         self.assertEqual(normalized[1][3], 'What is Business Analytics?')
         self.assertEqual(normalized[1][6], 'Raw data only')
         self.assertEqual(normalized[1][9], 'Database storage')
+
+    def test_resolve_relative_path_supports_long_workbook_path(self):
+        relative_path = (
+            'CDA/ADA-134/PREDICTIVE ANALYTICS WITH REGRESSION/'
+            '. Case Study  _ Sales Promotion Decision with Regression Analysis/'
+            '. Case Study  _ Sales Promotion Decision with Regression Analysis.xlsx'
+        )
+
+        workbook_path, normalized = _resolve_relative_path('CDA', relative_path)
+
+        self.assertEqual(normalized, relative_path)
+        self.assertTrue(str(workbook_path).endswith('. Case Study  _ Sales Promotion Decision with Regression Analysis.xlsx'))
