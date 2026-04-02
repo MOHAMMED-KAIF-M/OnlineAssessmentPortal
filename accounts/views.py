@@ -6,6 +6,16 @@ from .forms import UserRegistrationForm, UserLoginForm
 from .models import User
 
 
+def _redirect_if_not_admin(request):
+    if not request.user.is_portal_admin:
+        return redirect('student_dashboard')
+    return None
+
+
+def _admin_context(admin_page, **extra_context):
+    return {'admin_page': admin_page, **extra_context}
+
+
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -60,9 +70,38 @@ def student_dashboard(request):
 
 @login_required
 def admin_dashboard(request):
-    if not request.user.is_portal_admin:
-        return redirect('student_dashboard')
-    return render(request, 'accounts/admin_dashboard.html')
+    redirect_response = _redirect_if_not_admin(request)
+    if redirect_response:
+        return redirect_response
+    return render(
+        request,
+        'accounts/admin_dashboard.html',
+        _admin_context('dashboard'),
+    )
+
+
+@login_required
+def admin_profile(request):
+    redirect_response = _redirect_if_not_admin(request)
+    if redirect_response:
+        return redirect_response
+    return render(
+        request,
+        'accounts/admin_profile.html',
+        _admin_context('profile'),
+    )
+
+
+@login_required
+def admin_settings(request):
+    redirect_response = _redirect_if_not_admin(request)
+    if redirect_response:
+        return redirect_response
+    return render(
+        request,
+        'accounts/admin_settings.html',
+        _admin_context('settings'),
+    )
 
 
 def logout_view(request):

@@ -6,8 +6,19 @@
 {% block content %}
 <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
     <div class="mb-12">
-        <h1 class="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">Available Assessments</h1>
+        <h1 class="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            {% if course_filter %}
+                {{ course_filter }} Assessments
+            {% else %}
+                All Available Assessments
+            {% endif %}
+        </h1>
         <p class="mt-4 text-lg text-slate-300">Choose an assessment to test your knowledge and track your progress.</p>
+        {% if course_filter %}
+            <a href="{% url 'assessment_list' %}" class="mt-4 inline-flex items-center text-sm font-semibold text-amber-400 hover:text-amber-300">
+                &larr; Clear Filter
+            </a>
+        {% endif %}
     </div>
 
     {% if assessments %}

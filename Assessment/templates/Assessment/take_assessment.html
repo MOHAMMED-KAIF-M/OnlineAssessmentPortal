@@ -65,7 +65,7 @@
 
 <script>
     // Simple Timer Logic
-    const durationInMinutes = {{ assessment.duration_minutes }};
+    const durationInMinutes = parseInt("{{ assessment.duration_minutes|default:30 }}");
     let timeRemaining = durationInMinutes * 60;
     const timerDisplay = document.getElementById('timer');
     const form = document.getElementById('assessment-form');

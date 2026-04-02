@@ -1,0 +1,47 @@
+<details class="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm" {% if level < 1 %}open{% endif %}>
+    <summary class="flex cursor-pointer list-none flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                {% if level == 0 %}
+                    Subcourse
+                {% elif level == 1 %}
+                    Module
+                {% elif level == 2 %}
+                    Topic
+                {% else %}
+                    Section
+                {% endif %}
+            </p>
+            <h3 class="mt-2 text-lg font-semibold text-slate-950">{{ node.name }}</h3>
+        </div>
+        <div class="rounded-2xl bg-white px-4 py-3 text-sm text-slate-600">
+            <p>{{ node.child_folder_count }} subfolders</p>
+            <p class="mt-1">{{ node.file_count }} files</p>
+        </div>
+    </summary>
+
+    <div class="mt-4 space-y-4 border-t border-slate-200 pt-4">
+        {% if node.folders %}
+            {% for folder in node.folders %}
+                {% include "courses/includes/folder_tree.html" with node=folder level=level|add:"1" course_code=course_code only %}
+            {% endfor %}
+        {% endif %}
+
+        {% if node.files %}
+            <div class="grid gap-3 lg:grid-cols-2">
+                {% for file in node.files %}
+                    <a class="rounded-2xl border border-slate-200 bg-white px-4 py-4 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md" href="{% url 'course_workbook_detail' course_code %}?path={{ file.relative_path|urlencode }}">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">File</p>
+                        <p class="text-sm font-semibold text-slate-950">{{ file.name }}</p>
+                        <p class="mt-1 text-xs text-slate-500">{{ file.filename }}</p>
+                        <span class="mt-4 inline-flex items-center justify-center rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white">View Workbook</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if not node.folders and not node.files %}
+            <p class="text-sm text-slate-500">This folder is currently empty.</p>
+        {% endif %}
+    </div>
+</details>

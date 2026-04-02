@@ -7,9 +7,17 @@ from .models import Assessment, Question, Choice, AssessmentAttempt
 
 @login_required
 def assessment_list(request):
-    """ List all available assessments. """
+    """ List all available assessments, with optional course filtering. """
+    course_filter = request.GET.get('course')
     assessments = Assessment.objects.all().order_by('-created_at')
-    return render(request, 'Assessment/assessment_list.html', {'assessments': assessments})
+    
+    if course_filter:
+        assessments = assessments.filter(course=course_filter)
+        
+    return render(request, 'Assessment/assessment_list.html', {
+        'assessments': assessments,
+        'course_filter': course_filter
+    })
 
 
 @login_required
@@ -75,3 +83,9 @@ def assessment_result(request, assessment_id):
         'assessment': assessment,
         'attempt': attempt
     })
+
+
+@login_required
+def excel_viewer(request):
+    """ View for reading Excel files in the browser. """
+    return render(request, 'Assessment/excel_viewer.html')

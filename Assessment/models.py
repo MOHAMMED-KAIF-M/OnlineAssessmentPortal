@@ -3,7 +3,15 @@ from django.conf import settings
 
 
 class Assessment(models.Model):
+    COURSE_CHOICES = [
+        ('AIE', 'Artificial Intelligence Engineer'),
+        ('CDS', 'Certified Data Scientist'),
+        ('CDA', 'Certified Data Analyst'),
+        ('CDE', 'Certified Data Engineer'),
+    ]
+    
     title = models.CharField(max_length=200)
+    course = models.CharField(max_length=3, choices=COURSE_CHOICES, default='AIE')
     description = models.TextField(blank=True)
     duration_minutes = models.PositiveIntegerField(default=30)
     total_marks = models.PositiveIntegerField(default=100)

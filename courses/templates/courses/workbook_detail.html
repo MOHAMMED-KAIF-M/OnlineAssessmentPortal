@@ -1,0 +1,114 @@
+{% extends "accounts/admin_layout.html" %}
+
+{% block title %}{{ workbook.name }}{% endblock %}
+
+{% block admin_eyebrow %}Workbook Viewer{% endblock %}
+{% block admin_heading %}{{ workbook.name }}{% endblock %}
+{% block admin_description %}This page lets you switch between the actual workbook sheets and view the imported question content for the selected sheet.{% endblock %}
+
+{% block admin_header_detail %}
+<div class="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Workbook Summary</p>
+    <p class="mt-2 text-sm font-semibold text-slate-950">{{ workbook.question_count }} questions</p>
+    <p class="mt-1 text-sm text-slate-600">{{ workbook.sheet_count }} workbook sheets and {{ workbook.imported_sheet_count }} imported sheets</p>
+</div>
+{% endblock %}
+
+{% block admin_body %}
+<div class="space-y-6">
+    <section class="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Workbook Details</p>
+                <h2 class="mt-3 font-display text-3xl font-bold text-slate-950">{{ workbook.filename }}</h2>
+                <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{{ workbook.source_path }}</p>
+            </div>
+            <a class="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600" href="{% url 'course_detail' course.code %}">Back to {{ course.code }}</a>
+        </div>
+
+        <div class="mt-6 grid gap-4 lg:grid-cols-3">
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Course</p>
+                <p class="mt-3 text-lg font-semibold text-slate-950">{{ course.code }}</p>
+            </article>
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-5 lg:col-span-2">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Folder Path</p>
+                <p class="mt-3 text-sm font-medium leading-7 text-slate-700">{{ workbook.module_path }}</p>
+            </article>
+        </div>
+
+        {% if workbook.type_counts %}
+            <div class="mt-6 flex flex-wrap gap-3">
+                {% for item in workbook.type_counts %}
+                    <span class="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">{{ item.label }}: {{ item.count }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Sheet Viewer</p>
+        <h2 class="mt-3 font-display text-3xl font-bold text-slate-950">Workbook Sheets</h2>
+
+        {% if workbook.sheet_views %}
+            <div class="mt-6 flex flex-wrap gap-3">
+                {% for sheet in workbook.sheet_views %}
+                    <a class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {% if sheet.is_active %}bg-slate-950 text-white shadow-sm{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}" href="{% url 'course_workbook_detail' course.code %}?path={{ workbook.relative_path|urlencode }}&sheet={{ sheet.name|urlencode }}">
+                        {{ sheet.selector_label }}
+                    </a>
+                {% endfor %}
+            </div>
+
+            {% if workbook.active_sheet %}
+                <div class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                    <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Selected Sheet</p>
+                            <h3 class="mt-2 text-2xl font-semibold text-slate-950">{{ workbook.active_sheet.name }}</h3>
+                        </div>
+                        <p class="text-sm text-slate-500">
+                            {% if workbook.active_sheet.name == 'questions' %}
+                                {{ workbook.active_sheet.body_rows|length }} questions in sheet
+                            {% else %}
+                                {{ workbook.active_sheet.row_count }} rows in workbook
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    {% if workbook.active_sheet.header %}
+                        <div class="mt-5 overflow-x-auto rounded-3xl border border-slate-200 bg-white">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        {% for cell in workbook.active_sheet.header %}
+                                            <th class="px-4 py-3 text-left font-semibold text-slate-700">{{ cell|default:"-" }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    {% for row in workbook.active_sheet.body_rows %}
+                                        <tr class="align-top">
+                                            {% for cell in row %}
+                                                <td class="px-4 py-3 text-slate-600">{{ cell|default:"-" }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="mt-5 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+                            <p class="text-sm font-semibold text-slate-950">This sheet is empty.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+                <p class="text-lg font-semibold text-slate-950">No workbook sheets found</p>
+                <p class="mt-2 text-sm text-slate-600">The workbook exists in your folder hierarchy, but its sheets could not be loaded.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

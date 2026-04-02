@@ -170,6 +170,71 @@ class RegistrationSecurityTests(TestCase):
             fetch_redirect_response=False,
         )
 
+    def test_admin_dashboard_shows_profile_settings_and_logout_links(self):
+        user = User.objects.create_superuser(
+            username='admin-user',
+            password='StrongPass123!',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('admin_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('admin_profile'))
+        self.assertContains(response, reverse('admin_settings'))
+        self.assertContains(response, reverse('logout'))
+
+    def test_admin_profile_page_renders_for_admin(self):
+        user = User.objects.create_superuser(
+            username='admin-user',
+            email='admin@example.com',
+            password='StrongPass123!',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('admin_profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'accounts/admin_profile.html')
+        self.assertContains(response, 'admin@example.com')
+        self.assertContains(response, 'Admin Profile')
+
+    def test_admin_settings_page_renders_for_admin(self):
+        user = User.objects.create_superuser(
+            username='admin-user',
+            password='StrongPass123!',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('admin_settings'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'accounts/admin_settings.html')
+        self.assertContains(response, 'Settings')
+        self.assertContains(response, 'Notification Preferences')
+
+    def test_student_cannot_access_admin_profile_or_settings(self):
+        user = User.objects.create_user(
+            username='student-user',
+            password='StrongPass123!',
+            role=User.IS_STUDENT,
+        )
+        self.client.force_login(user)
+
+        profile_response = self.client.get(reverse('admin_profile'))
+        settings_response = self.client.get(reverse('admin_settings'))
+
+        self.assertRedirects(
+            profile_response,
+            reverse('student_dashboard'),
+            fetch_redirect_response=False,
+        )
+        self.assertRedirects(
+            settings_response,
+            reverse('student_dashboard'),
+            fetch_redirect_response=False,
+        )
+
     def test_invalid_login_shows_form_error(self):
         User.objects.create_user(
             username='registered-user',

@@ -1,0 +1,42 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="mx-auto min-h-screen max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <section class="overflow-hidden rounded-[36px] border border-white/20 bg-white/85 shadow-panel backdrop-blur-xl">
+        <header class="border-b border-slate-200 bg-white/95 px-6 py-5 sm:px-8">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <img class="h-14 w-auto" src="{% static 'datamites.png' %}" alt="Datamites logo">
+                    <div class="sm:border-l sm:border-slate-200 sm:pl-4">
+                        <p class="text-sm font-medium text-slate-500">Global Institute for Data Science</p>
+                        <p class="mt-1 text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Admin Workspace</p>
+                    </div>
+                </div>
+                {% include "accounts/includes/admin_corner_actions.html" %}
+            </div>
+        </header>
+
+        <div class="border-b border-slate-200 bg-slate-50/90 px-6 py-5 sm:px-8">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                <div class="max-w-3xl">
+                    <p class="text-sm font-semibold text-slate-500">{% now "l, F j, Y" %}</p>
+                    <p class="mt-5 text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">{% block admin_eyebrow %}Admin{% endblock %}</p>
+                    <h1 class="mt-3 font-display text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">{% block admin_heading %}Admin Panel{% endblock %}</h1>
+                    <p class="mt-4 max-w-2xl text-base leading-8 text-slate-600">{% block admin_description %}{% endblock %}</p>
+                </div>
+                {% block admin_header_detail %}{% endblock %}
+            </div>
+
+            <nav class="mt-6 flex flex-wrap gap-3">
+                <a class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {% if admin_page == 'dashboard' %}bg-slate-950 text-white shadow-sm{% else %}bg-white text-slate-700 hover:bg-slate-100{% endif %}" href="{% url 'admin_dashboard' %}">Dashboard</a>
+                <a class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {% if admin_page == 'courses' %}bg-slate-950 text-white shadow-sm{% else %}bg-white text-slate-700 hover:bg-slate-100{% endif %}" href="{% url 'course_list' %}">Courses</a>
+            </nav>
+        </div>
+
+        <div class="bg-white/95 px-6 py-6 sm:px-8 sm:py-8">
+            {% block admin_body %}{% endblock %}
+        </div>
+    </section>
+</div>
+{% endblock %}
